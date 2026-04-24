@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  hardhat-node:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./eth-vault:/app
+    command: sh -c "npm install && npx hardhat node --hostname 0.0.0.0"
+    ports:
+      - "8545:8545"
+    networks:
+      - vault-network
+
+  frontend:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./vault-frontend:/app
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - hardhat-node
+    networks:
+      - vault-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus-config:/etc/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - vault-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - vault-network
+
+networks:
+  vault-network:
+    driver: bridge

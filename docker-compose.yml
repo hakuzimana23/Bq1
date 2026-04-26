@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   hardhat-node:
     image: node:20
@@ -9,6 +7,19 @@ services:
     command: sh -c "npm install && npx hardhat node --hostname 0.0.0.0"
     ports:
       - "8545:8545"
+    networks:
+      - vault-network
+
+  eth-exporter:
+    image: hunterlong/ethexporter:latest
+    environment:
+      - GETH=http://hardhat-node:8545
+    volumes:
+      - ./addresses.txt:/app/addresses.txt
+    ports:
+      - "9015:9015"
+    depends_on:
+      - hardhat-node
     networks:
       - vault-network
 
